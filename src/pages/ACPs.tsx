@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { StatusBar } from '../components/StatusBar';
 import { Footer } from '../components/Footer';
 import { GlowingEffect } from '../components/ui/glowing-effect';
+import { Spotlight } from '../components/ui/spotlight';
 import {
   FileText,
   ExternalLink,
@@ -879,7 +880,29 @@ export function ACPs() {
   );
 }
 
-// ACP Card Component
+
+// Add this helper function before the ACPCard component
+const getSpotlightColorByStatus = (status: string): string => {
+  const statusLower = status.toLowerCase();
+
+  if (statusLower.includes('activated')) {
+    return 'from-green-500/25 via-green-400/15 to-green-300/10 dark:from-green-400/25 dark:via-green-300/15 dark:to-green-200/10';
+  }
+  if (statusLower.includes('implementable')) {
+    return 'from-blue-500/25 via-blue-400/15 to-blue-300/10 dark:from-blue-400/25 dark:via-blue-300/15 dark:to-blue-200/10';
+  }
+  if (statusLower.includes('proposed') || statusLower.includes('draft')) {
+    return 'from-yellow-500/25 via-yellow-400/15 to-yellow-300/10 dark:from-yellow-400/25 dark:via-yellow-300/15 dark:to-yellow-200/10';
+  }
+  if (statusLower.includes('stale')) {
+    return 'from-red-500/25 via-red-400/15 to-red-300/10 dark:from-red-400/25 dark:via-red-300/15 dark:to-red-200/10';
+  }
+
+  // Default blue
+  return 'from-blue-500/20 via-blue-400/15 to-blue-300/10 dark:from-blue-400/20 dark:via-blue-300/15 dark:to-blue-200/10';
+};
+
+// Complete ACPCard Component (replace the existing one)
 interface ACPCardProps {
   acp: LocalACP;
   viewMode: ViewMode;
@@ -887,153 +910,90 @@ interface ACPCardProps {
   getStatusIcon: (status: string) => JSX.Element;
   getStatusColor: (status: string) => string;
   getComplexityColor: (complexity: string) => string;
-  isDark: boolean;
 }
 
-function ACPCard({ acp, viewMode, onNavigate, getStatusIcon, getStatusColor, getComplexityColor, isDark }: ACPCardProps) {
+function ACPCard({ acp, viewMode, onNavigate, getStatusIcon, getStatusColor, getComplexityColor }: ACPCardProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const spotlightColor = getSpotlightColorByStatus(acp.status);
+
   if (viewMode === 'list') {
     return (
-      <div className="relative h-full min-h-[120px]">
-        {/* Outer container with theme-aware glowing effect */}
-        <div className={cn(
-          "relative h-full rounded-xl p-1",
-          isDark
-            ? "border-[0.5px] border-white/10"
-            : "border-[0.5px] border-gray-900/10"
-        )}>
-          <GlowingEffect
-            spread={35}
-            glow={true}
-            disabled={false}
-            proximity={60}
-            inactiveZone={0.1}
-            borderWidth={1.5}
-            movementDuration={1.2}
-          />
+      <div
+        className="relative bg-white dark:bg-dark-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 dark:border-gray-700 p-4 cursor-pointer overflow-hidden group"
+        onClick={() => onNavigate(acp.number)}
+      >
+        {/* Spotlight Effect */}
+        <Spotlight
+          className={spotlightColor}
+          size={200}
+          springOptions={{ bounce: 0.15, damping: 20 }}
+        />
 
-          {/* Glassmorphic inner card - theme aware */}
-          <div
-            className={cn(
-              "relative h-full cursor-pointer overflow-hidden rounded-lg",
-              "shadow-lg transition-all duration-300 hover:shadow-xl",
-              "transform hover:-translate-y-0.5 hover:scale-[1.01]",
-              isDark ? [
-                "bg-white/5 backdrop-blur-xl",
-                "border border-white/10",
-                "shadow-black/10 hover:bg-white/8"
-              ] : [
-                "bg-gray-900/5 backdrop-blur-xl",
-                "border border-gray-900/10",
-                "shadow-gray-900/10 hover:bg-gray-900/8"
-              ]
-            )}
-            onClick={() => onNavigate(acp.number)}
-          >
-            <div className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4 flex-1 min-w-0">
-                  <div className="flex-shrink-0">
-                    <span className={cn(
-                      "text-sm font-mono px-2 py-1 rounded-md backdrop-blur-sm",
-                      isDark
-                        ? "text-white/70 bg-white/10 border border-white/20"
-                        : "text-gray-600 bg-gray-900/10 border border-gray-900/20"
-                    )}>
-                      ACP-{acp.number}
-                    </span>
-                  </div>
+        {/* Subtle background gradient that appears on hover */}
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50/50 dark:to-blue-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                  <div className="flex-1 min-w-0">
-                    <h3 className={cn(
-                      "text-lg font-semibold truncate",
-                      isDark ? "text-white" : "text-gray-900"
-                    )}>
-                      {acp.title}
-                    </h3>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(acp.status)}`}>
-                        {getStatusIcon(acp.status)}
-                        {acp.status}
-                      </div>
-                      <span className={cn(
-                        "px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm",
-                        isDark
-                          ? "bg-white/10 text-white/70 border border-white/20"
-                          : "bg-gray-900/10 text-gray-700 border border-gray-900/20"
-                      )}>
-                        {acp.track}
-                      </span>
-                      {acp.complexity && (
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getComplexityColor(acp.complexity)}`}>
-                          {acp.complexity}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <div className="text-right">
-                    <div className={cn(
-                      "text-sm",
-                      isDark ? "text-white/70" : "text-gray-700"
-                    )}>
-                      {acp.authors.slice(0, 2).map(author => author.name).join(', ')}
-                      {acp.authors.length > 2 && ` +${acp.authors.length - 2} more`}
-                    </div>
-                    {acp.readingTime && (
-                      <div className={cn(
-                        "text-xs flex items-center gap-1",
-                        isDark ? "text-white/50" : "text-gray-500"
-                      )}>
-                        <BookOpen className="w-3 h-3" />
-                        {acp.readingTime} min read
-                      </div>
-                    )}
-                  </div>
-
-                  {acp.discussion && (
-                    <a
-                      href={acp.discussion}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className={cn(
-                        "p-2 rounded-lg backdrop-blur-sm transition-all duration-200",
-                        isDark
-                          ? "text-white/50 hover:text-white/80 bg-white/5 hover:bg-white/15 border border-white/10"
-                          : "text-gray-500 hover:text-gray-800 bg-gray-900/5 hover:bg-gray-900/15 border border-gray-900/10"
-                      )}
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  )}
-                </div>
-              </div>
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center space-x-4 flex-1 min-w-0">
+            <div className="flex-shrink-0">
+              <span className="text-sm font-mono text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
+                ACP-{acp.number}
+              </span>
             </div>
 
-            {/* Subtle gradient overlay for depth - theme aware */}
-            <div className={cn(
-              "absolute inset-0 bg-gradient-to-br pointer-events-none rounded-lg",
-              isDark
-                ? "from-white/[0.02] via-transparent to-black/10"
-                : "from-gray-900/[0.02] via-transparent to-gray-900/10"
-            )}></div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-900 dark:group-hover:text-blue-100 transition-colors">
+                {acp.title}
+              </h3>
+              <div className="flex items-center space-x-2 mt-1">
+                <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 group-hover:scale-105 ${getStatusColor(acp.status)}`}>
+                  {getStatusIcon(acp.status)}
+                  {acp.status}
+                </div>
+                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs font-medium transition-all duration-200 group-hover:bg-gray-200 dark:group-hover:bg-gray-600">
+                  {acp.track}
+                </span>
+                {acp.complexity && (
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 group-hover:scale-105 ${getComplexityColor(acp.complexity)}`}>
+                    {acp.complexity}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
 
-            {/* Hover glow effect - theme aware */}
-            <div className={cn(
-              "absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-lg bg-gradient-to-br pointer-events-none",
-              isDark
-                ? "from-white/5 via-transparent to-transparent"
-                : "from-gray-900/5 via-transparent to-transparent"
-            )}></div>
+          <div className="flex items-center space-x-3">
+            <div className="text-right">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                {acp.authors.slice(0, 2).map(author => author.name).join(', ')}
+                {acp.authors.length > 2 && ` +${acp.authors.length - 2} more`}
+              </div>
+              {acp.readingTime && (
+                <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  <BookOpen className="w-3 h-3" />
+                  {acp.readingTime} min read
+                </div>
+              )}
+            </div>
+
+            {acp.discussion && (
+              <a
+                href={acp.discussion}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-1 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
-  // Grid view
+  // Grid view with all existing features preserved
   return (
     <div className="relative h-full min-h-[280px]">
       {/* Outer container with theme-aware glowing effect */}
@@ -1058,7 +1018,7 @@ function ACPCard({ acp, viewMode, onNavigate, getStatusIcon, getStatusColor, get
           className={cn(
             "relative h-full cursor-pointer overflow-hidden rounded-lg",
             "shadow-2xl transition-all duration-300 hover:shadow-xl",
-            "transform hover:-translate-y-0.5 hover:scale-[1.02]",
+            "transform hover:-translate-y-0.5 hover:scale-[1.02] group",
             isDark ? [
               "bg-white/5 backdrop-blur-xl",
               "border border-white/10",
@@ -1071,18 +1031,25 @@ function ACPCard({ acp, viewMode, onNavigate, getStatusIcon, getStatusColor, get
           )}
           onClick={() => onNavigate(acp.number)}
         >
-          <div className="p-6">
+          {/* Spotlight Effect */}
+          <Spotlight
+            className={spotlightColor}
+            size={220}
+            springOptions={{ bounce: 0.15, damping: 20 }}
+          />
+
+          <div className="relative z-10 p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2">
                 <span className={cn(
-                  "text-sm font-mono px-2.5 py-1 rounded-md backdrop-blur-sm shadow-sm",
+                  "text-sm font-mono px-2.5 py-1 rounded-md backdrop-blur-sm shadow-sm transition-colors",
                   isDark
-                    ? "text-white/70 bg-white/10 border border-white/20"
-                    : "text-gray-600 bg-gray-900/10 border border-gray-900/20"
+                    ? "text-white/70 bg-white/10 border border-white/20 group-hover:text-white/90 group-hover:bg-white/15"
+                    : "text-gray-600 bg-gray-900/10 border border-gray-900/20 group-hover:text-gray-800 group-hover:bg-gray-900/15"
                 )}>
                   ACP-{acp.number}
                 </span>
-                <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(acp.status)}`}>
+                <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 group-hover:scale-105 ${getStatusColor(acp.status)}`}>
                   {getStatusIcon(acp.status)}
                   {acp.status}
                 </div>
@@ -1107,16 +1074,20 @@ function ACPCard({ acp, viewMode, onNavigate, getStatusIcon, getStatusColor, get
             </div>
 
             <h3 className={cn(
-              "text-lg font-semibold mb-3 line-clamp-2",
-              isDark ? "text-white" : "text-gray-900"
+              "text-lg font-semibold mb-3 line-clamp-2 transition-colors",
+              isDark
+                ? "text-white group-hover:text-blue-100"
+                : "text-gray-900 group-hover:text-blue-900"
             )}>
               {acp.title}
             </h3>
 
             {acp.abstract && (
               <p className={cn(
-                "text-sm mb-4 line-clamp-3 leading-relaxed",
-                isDark ? "text-white/70" : "text-gray-600"
+                "text-sm mb-4 line-clamp-3 leading-relaxed transition-colors",
+                isDark
+                  ? "text-white/70 group-hover:text-white/80"
+                  : "text-gray-600 group-hover:text-gray-700"
               )}>
                 {acp.abstract}
               </p>
@@ -1124,15 +1095,15 @@ function ACPCard({ acp, viewMode, onNavigate, getStatusIcon, getStatusColor, get
 
             <div className="flex flex-wrap gap-2 mb-4">
               <span className={cn(
-                "px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur-sm shadow-sm",
+                "px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur-sm shadow-sm transition-all duration-200",
                 isDark
-                  ? "bg-white/10 text-white/70 border border-white/20"
-                  : "bg-gray-900/10 text-gray-700 border border-gray-900/20"
+                  ? "bg-white/10 text-white/70 border border-white/20 group-hover:bg-white/15 group-hover:text-white/80"
+                  : "bg-gray-900/10 text-gray-700 border border-gray-900/20 group-hover:bg-gray-900/15 group-hover:text-gray-800"
               )}>
                 {acp.track}
               </span>
               {acp.complexity && (
-                <span className={`px-2.5 py-1 rounded-full text-xs font-medium shadow-sm ${getComplexityColor(acp.complexity)}`}>
+                <span className={`px-2.5 py-1 rounded-full text-xs font-medium shadow-sm transition-all duration-200 group-hover:scale-105 ${getComplexityColor(acp.complexity)}`}>
                   {acp.complexity}
                 </span>
               )}
@@ -1140,10 +1111,10 @@ function ACPCard({ acp, viewMode, onNavigate, getStatusIcon, getStatusColor, get
                 <span
                   key={tag}
                   className={cn(
-                    "px-2.5 py-1 rounded-full text-xs font-medium shadow-sm",
+                    "px-2.5 py-1 rounded-full text-xs font-medium shadow-sm transition-all duration-200 group-hover:scale-105",
                     isDark
-                      ? "bg-blue-500/20 text-blue-300 border border-blue-400/30"
-                      : "bg-blue-500/10 text-blue-600 border border-blue-400/30"
+                      ? "bg-blue-500/20 text-blue-300 border border-blue-400/30 group-hover:bg-blue-500/30"
+                      : "bg-blue-500/10 text-blue-600 border border-blue-400/30 group-hover:bg-blue-500/20"
                   )}
                 >
                   {tag}
@@ -1154,18 +1125,23 @@ function ACPCard({ acp, viewMode, onNavigate, getStatusIcon, getStatusColor, get
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <div className={cn(
-                  "p-1.5 rounded-md backdrop-blur-sm shadow-sm",
+                  "p-1.5 rounded-md backdrop-blur-sm shadow-sm transition-colors",
                   isDark
-                    ? "bg-white/10 border border-white/20"
-                    : "bg-gray-900/10 border border-gray-900/20"
+                    ? "bg-white/10 border border-white/20 group-hover:bg-white/15"
+                    : "bg-gray-900/10 border border-gray-900/20 group-hover:bg-gray-900/15"
                 )}>
                   <Users className={cn(
-                    "w-3.5 h-3.5",
-                    isDark ? "text-white/60" : "text-gray-600"
+                    "w-3.5 h-3.5 transition-colors",
+                    isDark
+                      ? "text-white/60 group-hover:text-white/70"
+                      : "text-gray-600 group-hover:text-gray-700"
                   )} />
                 </div>
                 <span className={cn(
-                  isDark ? "text-white/70" : "text-gray-600"
+                  "transition-colors",
+                  isDark
+                    ? "text-white/70 group-hover:text-white/80"
+                    : "text-gray-600 group-hover:text-gray-700"
                 )}>
                   {acp.authors.slice(0, 2).map(author => author.name).join(', ')}
                   {acp.authors.length > 2 && ` +${acp.authors.length - 2}`}
@@ -1175,19 +1151,23 @@ function ACPCard({ acp, viewMode, onNavigate, getStatusIcon, getStatusColor, get
               {acp.readingTime && (
                 <div className="flex items-center gap-2">
                   <div className={cn(
-                    "p-1.5 rounded-md backdrop-blur-sm shadow-sm",
+                    "p-1.5 rounded-md backdrop-blur-sm shadow-sm transition-colors",
                     isDark
-                      ? "bg-white/10 border border-white/20"
-                      : "bg-gray-900/10 border border-gray-900/20"
+                      ? "bg-white/10 border border-white/20 group-hover:bg-white/15"
+                      : "bg-gray-900/10 border border-gray-900/20 group-hover:bg-gray-900/15"
                   )}>
                     <BookOpen className={cn(
-                      "w-3.5 h-3.5",
-                      isDark ? "text-white/60" : "text-gray-600"
+                      "w-3.5 h-3.5 transition-colors",
+                      isDark
+                        ? "text-white/60 group-hover:text-white/70"
+                        : "text-gray-600 group-hover:text-gray-700"
                     )} />
                   </div>
                   <span className={cn(
-                    "text-xs",
-                    isDark ? "text-white/60" : "text-gray-500"
+                    "text-xs transition-colors",
+                    isDark
+                      ? "text-white/60 group-hover:text-white/70"
+                      : "text-gray-500 group-hover:text-gray-600"
                   )}>
                     {acp.readingTime} min
                   </span>
@@ -1198,15 +1178,15 @@ function ACPCard({ acp, viewMode, onNavigate, getStatusIcon, getStatusColor, get
 
           {/* Subtle gradient overlay for depth - theme aware */}
           <div className={cn(
-            "absolute inset-0 bg-gradient-to-br pointer-events-none rounded-lg",
+            "absolute inset-0 bg-gradient-to-br pointer-events-none rounded-lg transition-opacity duration-300",
             isDark
-              ? "from-white/[0.02] via-transparent to-black/10"
-              : "from-gray-900/[0.02] via-transparent to-gray-900/10"
+              ? "from-white/[0.02] via-transparent to-black/10 group-hover:from-white/[0.04]"
+              : "from-gray-900/[0.02] via-transparent to-gray-900/10 group-hover:from-gray-900/[0.04]"
           )}></div>
 
           {/* Hover glow effect - theme aware */}
           <div className={cn(
-            "absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-lg bg-gradient-to-br pointer-events-none",
+            "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg bg-gradient-to-br pointer-events-none",
             isDark
               ? "from-white/5 via-transparent to-transparent"
               : "from-gray-900/5 via-transparent to-transparent"
