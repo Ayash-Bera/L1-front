@@ -1,0 +1,3 @@
+[submodule "src/data/acps-source"]
+	path = src/data/acps-source
+	url = https://github.com/avalanche-foundation/ACPs.git
