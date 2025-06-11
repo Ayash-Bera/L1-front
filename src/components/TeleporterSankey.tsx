@@ -158,7 +158,7 @@ export function TeleporterSankeyDiagram() {
                     target: item.destinationChain || 'Unknown',
                     value: Number(item.messageCount) || 0
                 }))
-                .filter((msg: TeleporterMessage) => msg.value >= 5)
+                .filter((msg: TeleporterMessage) => msg.value >= 0)
                 .sort((a: TeleporterMessage, b: TeleporterMessage) => b.value - a.value);
 
             const totalMessages = rawData.metadata?.totalMessages ||
@@ -535,7 +535,7 @@ export function TeleporterSankeyDiagram() {
                 .attr('font-size', '12px')
                 .attr('font-weight', 'bold')
                 .attr('fill', isDark ? 'rgba(226, 232, 240, 0.7)' : 'rgba(30, 41, 59, 0.7)')
-                .text(`Total: ${data.metadata.totalMessages.toLocaleString()} messages (≥5 shown)`);
+                .text(`Total: ${data.metadata.totalMessages.toLocaleString()} messages`);
 
             // Add reset button if a chain is selected
             if (selectedChain) {
