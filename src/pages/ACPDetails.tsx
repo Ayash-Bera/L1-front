@@ -18,7 +18,8 @@ import {
   BookOpen,
   Tag,
   GitBranch,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Github
 } from 'lucide-react';
 import { getACPByNumber, LocalACP } from '../data/acps';
 
@@ -70,7 +71,7 @@ export function ACPDetails() {
     if (statusLower.includes('proposed') || statusLower.includes('draft')) {
       return 'text-yellow-500 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20';
     }
-    if (statusLower.includes('stale')) {
+    if (statusLower.includes('stale') || statusLower.includes('withdrawn')) {
       return 'text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20';
     }
     return 'text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20';
@@ -87,7 +88,7 @@ export function ACPDetails() {
     if (statusLower.includes('proposed') || statusLower.includes('draft')) {
       return <Clock className="w-4 h-4 text-yellow-500 dark:text-yellow-400" />;
     }
-    if (statusLower.includes('stale')) {
+    if (statusLower.includes('stale') || statusLower.includes('withdrawn')) {
       return <Archive className="w-4 h-4 text-red-500 dark:text-red-400" />;
     }
     return <FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
@@ -230,18 +231,51 @@ export function ACPDetails() {
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Authors:</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {acp.authors.map((author, index) => (
-                    <a
-                      key={index}
-                      href={`https://github.com/${author.github}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors"
-                    >
-                      {author.name}
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  ))}
+                  {acp.authors.map((author, index) => {
+                    // Validate GitHub username - should only contain alphanumeric characters, hyphens, and be reasonable length
+                    const isValidGithubUsername = /^[a-zA-Z0-9-]+$/.test(author.github) &&
+                      author.github.length > 0 &&
+                      author.github.length < 40 &&
+                      !author.github.startsWith('-') &&
+                      !author.github.endsWith('-');
+
+                    const githubUrl = isValidGithubUsername
+                      ? `https://github.com/${author.github}`
+                      : '#';
+
+                    console.log(`Author ${index}:`, {
+                      name: author.name,
+                      github: author.github,
+                      isValid: isValidGithubUsername,
+                      url: githubUrl
+                    });
+
+                    return (
+                      <div key={index} className="inline-flex">
+                        {isValidGithubUsername ? (
+                          <a
+                            href={githubUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors"
+                            title={`View ${author.name}'s GitHub profile`}
+                          >
+                            <Github className="w-3 h-3" />
+                            {author.name}
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ) : (
+                          <span
+                            className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-sm font-medium text-gray-700 dark:text-gray-200"
+                            title={`GitHub profile not available for ${author.name}`}
+                          >
+                            <Users className="w-3 h-3" />
+                            {author.name}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -343,7 +377,7 @@ export function ACPDetails() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-dark-800 hover:bg-gray-50 dark:hover:bg-dark-700"
                 >
-                  <FileText className="w-4 h-4 mr-2" />
+                  <Github className="w-4 h-4 mr-2" />
                   View on GitHub
                   <ExternalLink className="w-3 h-3 ml-1" />
                 </a>

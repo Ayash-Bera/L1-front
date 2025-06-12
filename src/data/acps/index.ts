@@ -17,6 +17,7 @@ export interface LocalACP {
     dependencies?: string[];
     replaces?: string[];
     supersededBy?: string[];
+    folderName?: string; // Add folder name for proper GitHub links
 }
 
 export interface ACPStats {
@@ -105,18 +106,18 @@ export async function getACPStats(): Promise<ACPStats> {
 
 function parseACPMarkdown(markdown: string, filePath: string): LocalACP | null {
     try {
-        // Extract number from path: /src/data/acps-source/ACPs/118-warp-signature-request/README.md -> "118"
-        // The folder pattern is: {number}-{name}/README.md
-        const numberMatch = filePath.match(/\/(\d+)-[^/]+\/README\.md$/);
-        if (!numberMatch) {
-            console.warn(`Could not extract ACP number from path: ${filePath}`);
+        // Extract number and folder name from path: /src/data/acps-source/ACPs/118-warp-signature-request/README.md
+        const folderMatch = filePath.match(/\/(\d+)-([^/]+)\/README\.md$/);
+        if (!folderMatch) {
+            console.warn(`Could not extract ACP info from path: ${filePath}`);
             return null;
         }
 
-        const number = numberMatch[1];
-        console.log(`Processing ACP-${number} from ${filePath}`);
+        const number = folderMatch[1];
+        const folderName = `${folderMatch[1]}-${folderMatch[2]}`;
+        console.log(`Processing ACP-${number} from ${filePath}, folder: ${folderName}`);
 
-        // Parse the markdown table (reuse your existing logic)
+        // Parse the markdown table
         const lines = markdown.split('\n');
         let title = '';
         let authors: Array<{ name: string; github: string }> = [];
@@ -131,31 +132,56 @@ function parseACPMarkdown(markdown: string, filePath: string): LocalACP | null {
         for (const line of lines) {
             if (!line.trim()) continue;
 
-            if (line.startsWith('| ACP |') || line.includes('| **ACP** |')) {
+            // Look for table start
+            if (line.includes('| ACP |') || line.includes('| **ACP** |') || line.match(/\|\s*ACP\s*\|/)) {
                 inTable = true;
                 continue;
             }
 
             if (!inTable) continue;
-            if (line.startsWith('##')) break;
 
-            if (line.includes('| **Title** |')) {
-                title = line.split('|')[2]?.trim() || '';
-            } else if (line.includes('| **Author(s)** |')) {
-                const authorText = line.split('|')[2] || '';
-                authors = parseAuthors(authorText);
-            } else if (line.includes('| **Status** |')) {
-                const statusText = line.split('|')[2] || '';
-                status = parseStatus(statusText);
-                discussion = parseDiscussionLink(statusText);
-            } else if (line.includes('| **Track** |')) {
-                track = line.split('|')[2]?.trim() || '';
-            } else if (line.includes('| **Depends-On** |')) {
-                dependencies = parseACPReferences(line.split('|')[2] || '');
-            } else if (line.includes('| **Replaces** |')) {
-                replaces = parseACPReferences(line.split('|')[2] || '');
-            } else if (line.includes('| **Superseded-By** |')) {
-                supersededBy = parseACPReferences(line.split('|')[2] || '');
+            // Stop at next heading
+            if (line.startsWith('##') || line.startsWith('# ')) break;
+
+            // Parse table rows
+            if (line.includes('| **Title** |') || line.includes('|Title|') || line.match(/\|\s*\*\*?Title\*\*?\s*\|/)) {
+                const titleMatch = line.split('|');
+                if (titleMatch.length >= 3) {
+                    title = titleMatch[2].trim().replace(/\*\*/g, '');
+                }
+            } else if (line.includes('| **Author(s)** |') || line.includes('|Author(s)|') || line.includes('| Author(s) |') || line.match(/\|\s*\*\*?Author\(s\)\*\*?\s*\|/)) {
+                const authorMatch = line.split('|');
+                if (authorMatch.length >= 3) {
+                    const authorText = authorMatch[2];
+                    authors = parseAuthors(authorText);
+                }
+            } else if (line.includes('| **Status** |') || line.includes('|Status|') || line.match(/\|\s*\*\*?Status\*\*?\s*\|/)) {
+                const statusMatch = line.split('|');
+                if (statusMatch.length >= 3) {
+                    const statusText = statusMatch[2] || '';
+                    status = parseStatus(statusText);
+                    discussion = parseDiscussionLink(statusText);
+                }
+            } else if (line.includes('| **Track** |') || line.includes('|Track|') || line.match(/\|\s*\*\*?Track\*\*?\s*\|/)) {
+                const trackMatch = line.split('|');
+                if (trackMatch.length >= 3) {
+                    track = trackMatch[2].trim().replace(/\*\*/g, '');
+                }
+            } else if (line.includes('| **Depends-On** |') || line.includes('|Depends-On|') || line.match(/\|\s*\*\*?Depends-On\*\*?\s*\|/)) {
+                const depsMatch = line.split('|');
+                if (depsMatch.length >= 3) {
+                    dependencies = parseACPReferences(depsMatch[2] || '');
+                }
+            } else if (line.includes('| **Replaces** |') || line.includes('|Replaces|') || line.match(/\|\s*\*\*?Replaces\*\*?\s*\|/)) {
+                const replacesMatch = line.split('|');
+                if (replacesMatch.length >= 3) {
+                    replaces = parseACPReferences(replacesMatch[2] || '');
+                }
+            } else if (line.includes('| **Superseded-By** |') || line.includes('|Superseded-By|') || line.match(/\|\s*\*\*?Superseded-By\*\*?\s*\|/)) {
+                const supersededMatch = line.split('|');
+                if (supersededMatch.length >= 3) {
+                    supersededBy = parseACPReferences(supersededMatch[2] || '');
+                }
             }
         }
 
@@ -187,7 +213,8 @@ function parseACPMarkdown(markdown: string, filePath: string): LocalACP | null {
             readingTime,
             dependencies,
             replaces,
-            supersededBy
+            supersededBy,
+            folderName
         };
     } catch (error) {
         console.error(`Error parsing ACP from ${filePath}:`, error);
@@ -198,34 +225,133 @@ function parseACPMarkdown(markdown: string, filePath: string): LocalACP | null {
 function parseAuthors(text: string): Array<{ name: string; github: string }> {
     const authors: Array<{ name: string; github: string }> = [];
 
-    // Handle multiple authors separated by commas or "and"
-    const authorParts = text.split(/,|\sand\s/).map(part => part.trim());
+    // Clean up the text
+    const cleanText = text.trim().replace(/\*\*/g, '');
+    console.log('Parsing authors from text:', cleanText);
 
-    authorParts.forEach(part => {
-        // Match patterns like "John Doe (@johndoe)" or "John Doe"
-        const match = part.match(/([^(@\n]+)(?:\s*\([@]?([^)]+)\))?/);
-        if (match && match[1]) {
-            const name = match[1].trim();
-            const github = match[2]?.trim().replace('@', '') || name.toLowerCase().replace(/\s+/g, '');
+    // Handle multiple authors separated by commas, "and", or line breaks
+    const authorParts = cleanText.split(/[,\n]|\sand\s/).map(part => part.trim()).filter(part => part.length > 0);
+    console.log('Author parts:', authorParts);
 
-            if (name && name !== '**Author(s)**') {
+    authorParts.forEach((part, index) => {
+        console.log(`Processing author part ${index}:`, part);
+
+        // Skip table headers
+        if (part.includes('Author(s)') || part === '---' || part === '|') {
+            console.log('Skipping table header or separator');
+            return;
+        }
+
+        // Pattern 1: Markdown link format "[Name](https://github.com/username)"
+        const markdownLinkMatch = part.match(/\[([^\]]+)\]\(https?:\/\/github\.com\/([^)\/\s]+)[^)]*\)/);
+        if (markdownLinkMatch && markdownLinkMatch[1] && markdownLinkMatch[2]) {
+            const name = markdownLinkMatch[1].trim();
+            const github = markdownLinkMatch[2].trim();
+            console.log('Found markdown link format:', { name, github });
+            if (name && github && name !== 'Author(s)') {
                 authors.push({ name, github });
+                return;
             }
+        }
+
+        // Pattern 2: "Name (@username)" or "Name (@username, @username2)"
+        const usernameMatch = part.match(/([^(@\n]+?)\s*\(\s*[@]?([^)]+)\)/);
+        if (usernameMatch && usernameMatch[1]) {
+            const name = usernameMatch[1].trim();
+            const githubPart = usernameMatch[2].trim();
+            console.log('Found username format:', { name, githubPart });
+
+            // Extract GitHub username (remove any URLs or extra text)
+            let github = githubPart;
+
+            // If it contains a GitHub URL, extract username from it
+            const urlMatch = githubPart.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/([^\/\s\),]+)/);
+            if (urlMatch && urlMatch[1]) {
+                github = urlMatch[1];
+                console.log('Extracted username from URL:', github);
+            } else {
+                // Remove @ symbol and any extra characters
+                github = githubPart.replace(/[@\s]/g, '').split(/[,\s]/)[0];
+                console.log('Cleaned username:', github);
+            }
+
+            if (name && github && name !== 'Author(s)') {
+                authors.push({ name, github });
+                return;
+            }
+        }
+
+        // Pattern 3: Direct GitHub URL "https://github.com/username"
+        const directUrlMatch = part.match(/https?:\/\/github\.com\/([^\/\s\),]+)/);
+        if (directUrlMatch && directUrlMatch[1]) {
+            const github = directUrlMatch[1];
+            // Use the GitHub username as the display name if no other name is found
+            const name = github;
+            console.log('Found direct GitHub URL:', { name, github });
+            authors.push({ name, github });
+            return;
+        }
+
+        // Pattern 4: "Name <email@domain>" - extract name only
+        const emailMatch = part.match(/([^<]+)\s*<[^>]+>/);
+        if (emailMatch && emailMatch[1]) {
+            const name = emailMatch[1].trim();
+            if (name && name !== 'Author(s)') {
+                // Generate a GitHub username from the name
+                const github = name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+                console.log('Found email format:', { name, github });
+                authors.push({ name, github });
+                return;
+            }
+        }
+
+        // Pattern 5: Just a name (fallback)
+        const cleanPart = part.replace(/[|@]/g, '').trim();
+        if (cleanPart && cleanPart !== 'Author(s)' && cleanPart.length > 1 && !cleanPart.includes('---') && !cleanPart.startsWith('http')) {
+            const name = cleanPart;
+            // Generate GitHub username from name
+            const github = name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+            console.log('Using fallback name format:', { name, github });
+            authors.push({ name, github });
         }
     });
 
+    console.log('Final parsed authors:', authors);
     return authors;
 }
 
 function parseStatus(text: string): string {
+    // Clean up the text
+    const cleanText = text.trim().replace(/\*\*/g, '');
+
     // Extract status from markdown links or plain text
-    const statusMatch = text.match(/\[([^\]]+)\]|\b(\w+)\b/);
-    return (statusMatch?.[1] || statusMatch?.[2] || 'Unknown').trim();
+    const statusMatch = cleanText.match(/\[([^\]]+)\]|\b(Activated|Implementable|Proposed|Draft|Stale|Withdrawn|Final)\b/i);
+    const status = (statusMatch?.[1] || statusMatch?.[2] || cleanText).trim();
+
+    // Clean up any remaining markdown or extra text
+    return status.replace(/\([^)]*\)/g, '').trim() || 'Unknown';
 }
 
 function parseDiscussionLink(text: string): string | undefined {
-    const match = text.match(/\[Discussion\]\(([^)]+)\)/);
-    return match?.[1];
+    // Pattern 1: [Discussion](URL)
+    const match1 = text.match(/\[Discussion\]\(([^)]+)\)/i);
+    if (match1?.[1]) {
+        return match1[1].trim();
+    }
+
+    // Pattern 2: [Status Text](Discussion URL)
+    const match2 = text.match(/\[[^\]]*\]\(([^)]*github\.com[^)]*)\)/i);
+    if (match2?.[1] && match2[1].includes('discussions')) {
+        return match2[1].trim();
+    }
+
+    // Pattern 3: Direct URL in the status field
+    const match3 = text.match(/(https?:\/\/[^\s)]+)/);
+    if (match3?.[1] && match3[1].includes('github') && match3[1].includes('discussions')) {
+        return match3[1].trim();
+    }
+
+    return undefined;
 }
 
 function parseACPReferences(text: string): string[] {
@@ -255,7 +381,7 @@ function extractAbstract(markdown: string): string {
         if (line.startsWith('##') && afterTable) {
             break;
         }
-        if (line.includes('| **Track** |')) {
+        if (line.includes('| **Track** |') || line.includes('|Track|')) {
             afterTable = true;
             continue;
         }

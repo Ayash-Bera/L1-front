@@ -291,3 +291,443 @@ body[data-theme="light"] .value-label,
 body[data-theme="light"] .diagram-title {
   fill: hsl(var(--muted-foreground)) !important;
 }
+
+/* Enhanced Markdown Styles - Add to src/index.css or create separate markdown.css */
+
+/* Base markdown styles */
+.acp-markdown-content {
+  line-height: 1.7;
+  color: hsl(var(--foreground));
+}
+
+/* Enhanced header styles with anchors */
+.markdown-heading {
+  position: relative;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  scroll-margin-top: 6rem;
+}
+
+.markdown-heading:first-child {
+  margin-top: 0;
+}
+
+.markdown-h1 {
+  font-size: 2.25rem;
+  border-bottom: 2px solid hsl(var(--border));
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.markdown-h2 {
+  font-size: 1.875rem;
+  border-bottom: 1px solid hsl(var(--border));
+  padding-bottom: 0.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.markdown-h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.markdown-h4 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.markdown-h5 {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-h6 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Header anchor links */
+.header-anchor {
+  position: absolute;
+  left: -1.5rem;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  text-decoration: none;
+  color: hsl(var(--muted-foreground));
+  transition: opacity 0.2s ease;
+  font-weight: normal;
+}
+
+.markdown-heading:hover .header-anchor {
+  opacity: 1;
+}
+
+.header-anchor:hover {
+  color: hsl(var(--primary));
+}
+
+/* Enhanced table styles */
+.table-container {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+}
+
+.table-wrapper {
+  min-width: 100%;
+  overflow-x: auto;
+}
+
+.markdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  background: hsl(var(--card));
+}
+
+.markdown-table th {
+  background: hsl(var(--muted));
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+.markdown-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid hsl(var(--border));
+  vertical-align: top;
+}
+
+.markdown-table tr:last-child td {
+  border-bottom: none;
+}
+
+.markdown-table tr:nth-child(even) {
+  background: hsl(var(--muted) / 0.3);
+}
+
+/* Enhanced blockquote styles */
+.markdown-blockquote {
+  position: relative;
+  margin: 1.5rem 0;
+  padding: 1rem 1.5rem;
+  background: hsl(var(--muted) / 0.5);
+  border-radius: 0.5rem;
+  font-style: italic;
+}
+
+.blockquote-border {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: hsl(var(--primary));
+  border-radius: 2px 0 0 2px;
+}
+
+.blockquote-content {
+  margin: 0;
+}
+
+/* Enhanced list styles */
+.markdown-list {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.markdown-ul {
+  list-style-type: disc;
+}
+
+.markdown-ol {
+  list-style-type: decimal;
+}
+
+.markdown-list li {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.markdown-list li::marker {
+  color: hsl(var(--primary));
+}
+
+/* Enhanced link styles */
+.acp-markdown-content a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  transition: all 0.2s ease;
+}
+
+.acp-markdown-content a:hover {
+  color: hsl(var(--primary) / 0.8);
+  text-decoration-thickness: 2px;
+}
+
+.external-link {
+  color: hsl(var(--primary));
+}
+
+.external-link-icon {
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+  opacity: 0.7;
+}
+
+/* Enhanced code block styles */
+.enhanced-code-block {
+  margin: 1.5rem 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: hsl(var(--muted));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.code-dots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+}
+
+.dot.red {
+  background: #ff5f56;
+}
+
+.dot.yellow {
+  background: #ffbd2e;
+}
+
+.dot.green {
+  background: #27ca3f;
+}
+
+.code-language {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.code-content {
+  margin: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  background: hsl(var(--background));
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.code-content code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-family: inherit;
+  color: hsl(var(--foreground));
+}
+
+/* Inline code styles */
+.acp-markdown-content p code,
+.acp-markdown-content li code,
+.acp-markdown-content td code {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+}
+
+/* Mermaid diagram styles */
+.mermaid-container {
+  margin: 1.5rem 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+}
+
+.mermaid-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: hsl(var(--muted));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.mermaid-diagram {
+  padding: 2rem;
+  background: hsl(var(--background));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.mermaid-output svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Math rendering styles */
+.math-display {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: hsl(var(--muted) / 0.3);
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.math-inline {
+  display: inline;
+  margin: 0 0.125rem;
+}
+
+.math-block-align {
+  margin: 1.5rem 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.math-block-header {
+  background: hsl(var(--muted));
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+}
+
+.math-content {
+  padding: 1rem;
+  background: hsl(var(--background));
+}
+
+.math-error {
+  color: hsl(var(--destructive));
+  background: hsl(var(--destructive) / 0.1);
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+  font-size: 0.875rem;
+}
+
+/* Paragraph and text styles */
+.acp-markdown-content p {
+  margin: 1rem 0;
+  line-height: 1.7;
+}
+
+.acp-markdown-content p:first-child {
+  margin-top: 0;
+}
+
+.acp-markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Horizontal rule */
+.acp-markdown-content hr {
+  margin: 2rem 0;
+  border: none;
+  height: 1px;
+  background: hsl(var(--border));
+}
+
+/* Image styles */
+.acp-markdown-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+/* Dark mode specific adjustments */
+.dark .markdown-table th {
+  background: hsl(var(--muted) / 0.8);
+}
+
+.dark .enhanced-code-block {
+  background: hsl(var(--card) / 0.5);
+}
+
+.dark .code-content {
+  background: hsl(var(--background) / 0.8);
+}
+
+.dark .mermaid-diagram {
+  background: hsl(var(--background) / 0.8);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .header-anchor {
+    display: none;
+  }
+
+  .markdown-h1 {
+    font-size: 1.875rem;
+  }
+
+  .markdown-h2 {
+    font-size: 1.5rem;
+  }
+
+  .markdown-h3 {
+    font-size: 1.25rem;
+  }
+
+  .table-container {
+    font-size: 0.75rem;
+  }
+
+  .markdown-table th,
+  .markdown-table td {
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .header-anchor {
+    display: none;
+  }
+
+  .enhanced-code-block,
+  .mermaid-container {
+    break-inside: avoid;
+  }
+
+  .markdown-table {
+    break-inside: avoid;
+  }
+}
